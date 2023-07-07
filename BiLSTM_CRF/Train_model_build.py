@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 def argmax(vec):
     _, idx = torch.max(vec, 1)
     return idx.item()
@@ -102,7 +103,8 @@ class CRF:
             emit_score = feats[:, seq_i, :]
             # 前一时间步得分 + 转移概率 + 当前时间步发射概率
             tag_var = (
-                    forward_var[:, seq_i, :].unsqueeze(1).repeat(1, feats.shape[2], 1)  # (batch_size, tagset_size, tagset_size)
+                    forward_var[:, seq_i, :].unsqueeze(1).repeat(1, feats.shape[2],
+                                                                 1)  # (batch_size, tagset_size, tagset_size)
                     + transitions
                     + emit_score.unsqueeze(2).repeat(1, 1, feats.shape[2])
             )
@@ -114,7 +116,8 @@ class CRF:
         # 按照不同序列长度不同取出最终得分
         forward_var = forward_var[range(feats.shape[0]), seq_len, :]
         # 手动干预,加上结束标志位的转移概率
-        terminal_var = forward_var + self.transitions[self.label_map[self.STOP_TAG]].unsqueeze(0).repeat(feats.shape[0], 1)
+        terminal_var = forward_var + self.transitions[self.label_map[self.STOP_TAG]].unsqueeze(0).repeat(feats.shape[0],
+                                                                                                         1)
         # 得到最终所有路径的分数和
         alpha = log_sum_exp(terminal_var)
         return alpha
@@ -123,7 +126,8 @@ class CRF:
         # 初始化,大小为(batch_size,)
         score = torch.zeros(feats.shape[0], device=self.device)
         # 将开始标签拼接到序列上起始位置，参与分数计算
-        start = torch.tensor([self.label_map[self.START_TAG]], device=self.device).unsqueeze(0).repeat(feats.shape[0], 1)
+        start = torch.tensor([self.label_map[self.START_TAG]], device=self.device).unsqueeze(0).repeat(feats.shape[0],
+                                                                                                       1)
         tags = torch.cat([start, tags], dim=1)
         # 在batch上遍历
         for batch_i in range(feats.shape[0]):
@@ -175,6 +179,7 @@ class CRF:
 
         # 回溯，向后遍历得到最优路径
         best_path = [best_tag_id]
+        # print("best_path:",best_path)
         for bptrs_t in reversed(backpointers):
             best_tag_id = bptrs_t[best_tag_id]
             best_path.append(best_tag_id)
